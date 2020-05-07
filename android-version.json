@@ -1,0 +1,7 @@
+{
+  updateUrl: "",
+  warVersion: "999.7.0",
+  minimumVersion: "0.1.0",
+  minimumVersionCode: 6,
+  androidUpdateUrl: ""
+}
