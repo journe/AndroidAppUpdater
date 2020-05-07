@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Logger.addLogAdapter(AndroidLogAdapter())
         check_btn.setOnClickListener {
-            Updater.check("",
+            Updater.check("https://raw.githubusercontent.com/journe/AndroidAppUpdater/master/samples/android-version.json",
                 object : UpdaterCallback {
                     override fun onFailure(t: String) {
 
