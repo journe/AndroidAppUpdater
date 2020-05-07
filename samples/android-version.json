@@ -3,5 +3,5 @@
   warVersion: "999.7.0",
   minimumVersion: "0.1.0",
   minimumVersionCode: 6,
-  androidUpdateUrl: ""
+  androidUpdateUrl: "https://raw.githubusercontent.com/journe/AndroidAppUpdater/master/samples/app-debug.apk"
 }
