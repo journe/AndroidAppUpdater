@@ -1,12 +1,12 @@
 package tech.jour.appupdater
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
-import com.orhanobut.logger.PrettyFormatStrategy
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.toast
 import tech.jour.lib.updater.Updater
 import tech.jour.lib.updater.UpdaterCallback
 
@@ -20,12 +20,23 @@ class MainActivity : AppCompatActivity() {
             Updater.check("https://raw.githubusercontent.com/journe/AndroidAppUpdater/master/samples/android-version.json",
                 object : UpdaterCallback {
                     override fun onFailure(t: String) {
-
+                        toast(t)
                     }
 
                     override fun onResponse(response: String) {
                         Logger.d(response)
                         val updaterBean = Gson().fromJson(response, UpdaterBean::class.java)
+                        val versionCode = packageManager.getPackageInfo(packageName, 0).versionCode
+                        if (versionCode < updaterBean.minimumVersionCode) {
+                            runOnUiThread {
+                                Updater.showDialog(
+                                    context = this@MainActivity,
+                                    forceUpdate = true,
+                                    updateUrl = updaterBean.androidUpdateUrl!!
+                                )
+                            }
+                        }
+
                     }
                 })
         }

@@ -1,8 +1,11 @@
 package tech.jour.lib.updater
 
-import androidx.core.app.ActivityCompat
+import android.content.Context
+import android.content.DialogInterface
+import androidx.appcompat.app.AlertDialog
 import okhttp3.*
 import java.io.IOException
+import kotlin.system.exitProcess
 
 /**
  * Created by journey on 2020/5/7.
@@ -28,6 +31,28 @@ object Updater {
                 }
             }
         })
+    }
+
+    fun showDialog(
+        context: Context,
+        forceUpdate: Boolean,
+        updateUrl: String
+    ) {
+        AlertDialog.Builder(context)
+            .setTitle("应用更新")
+            .setMessage("您的应用版本过低，请升级应用。")
+            .setPositiveButton(
+                "升级"
+            ) { dialog, which -> }
+            .setNegativeButton("取消") { dialog, which ->
+                if (forceUpdate) {
+                    exitProcess(0)
+                }
+                dialog.dismiss()
+            }
+            .setCancelable(!forceUpdate)
+            .create()
+            .show()
     }
 }
 
