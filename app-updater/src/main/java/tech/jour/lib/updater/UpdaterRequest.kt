@@ -1,7 +1,5 @@
 package tech.jour.lib.updater
 
-import android.content.ContentValues.TAG
-import android.util.Log
 import okhttp3.*
 import java.io.IOException
 

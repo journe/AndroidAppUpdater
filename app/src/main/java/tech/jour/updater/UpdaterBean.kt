@@ -1,4 +1,4 @@
-package tech.jour.appupdater
+package tech.jour.updater
 
 data class UpdaterBean(
     val androidUpdateUrl: String?,

@@ -7,13 +7,11 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "tech.jour.appupdater"
+        applicationId "tech.jour.updater"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {

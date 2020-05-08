@@ -1,4 +1,4 @@
-package tech.jour.appupdater
+package tech.jour.updater
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -16,11 +16,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Logger.addLogAdapter(AndroidLogAdapter())
+        Updater.register(this).apply {
+            dialogTitle = "应用更新"
+            dialogMessage = "您的应用版本过低，请升级应用。"
+            negativeButton = "取消"
+            positiveButton = "升级"
+            downloadDesc = "AppUpdater应用升级下载"
+            downloadTitle = "AppUpdater升级"
+            forceUpdate = true
+        }
         check_btn.setOnClickListener {
-            Updater.check("https://raw.githubusercontent.com/journe/AndroidAppUpdater/master/samples/android-version.json",
+            Updater.get("https://raw.githubusercontent.com/journe/AndroidAppUpdater/master/samples/android-version.json",
                 object : UpdaterCallback {
                     override fun onFailure(t: String) {
-                        toast(t)
+                        runOnUiThread {
+                            toast(t)
+                        }
                     }
 
                     override fun onResponse(response: String) {
@@ -31,7 +42,6 @@ class MainActivity : AppCompatActivity() {
                             runOnUiThread {
                                 Updater.showDialog(
                                     context = this@MainActivity,
-                                    forceUpdate = true,
                                     updateUrl = updaterBean.androidUpdateUrl!!
                                 )
                             }

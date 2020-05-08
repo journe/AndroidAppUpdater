@@ -2,10 +2,11 @@
 
 [![](https://jitpack.io/v/journe/AndroidAppUpdater.svg)](https://jitpack.io/#journe/AndroidAppUpdater)
 
-[中文文档](https://github.com/journe/AndroidAppUpdater/blob/master/README-ch.md)
-## Add library
+封装了APP检查更新的相关逻辑
 
-**Step 1.** Add the JitPack repository to your build file
+## 使用方法
+
+**Step 1.** 添加 JitPack repository
 
 ```groovy
 	allprojects {
@@ -16,7 +17,7 @@
 	}
 ```
 
-**Step 2.** Add the dependency
+**Step 2.** 添加依赖
 
 ```groovy
 	dependencies {

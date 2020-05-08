@@ -1,17 +1,30 @@
 package tech.jour.lib.updater
 
+import android.app.DownloadManager
 import android.content.Context
-import android.content.DialogInterface
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.Uri
 import androidx.appcompat.app.AlertDialog
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import okhttp3.*
 import java.io.IOException
 import kotlin.system.exitProcess
+
 
 /**
  * Created by journey on 2020/5/7.
  */
 object Updater {
-    fun check(url: String, callback: UpdaterCallback) {
+    var dialogTitle: String = "应用更新"
+    var downloadTitle: String = "下载"
+    var downloadDesc: String = "应用正在下载"
+    var dialogMessage: String = "您的应用版本过低，请升级应用。"
+    var negativeButton: String = "取消"
+    var positiveButton: String = "升级"
+    var forceUpdate: Boolean = false
+
+    fun get(url: String, callback: UpdaterCallback) {
         val okHttpClient = OkHttpClient()
         val request: Request = Request.Builder()
             .url(url)
@@ -33,9 +46,30 @@ object Updater {
         })
     }
 
+    fun post(url: String, body: RequestBody, callback: UpdaterCallback) {
+        val okHttpClient = OkHttpClient()
+        val request: Request = Request.Builder()
+            .url(url)
+            .post(body)
+            .build()
+        val call: Call = okHttpClient.newCall(request)
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onFailure(e.message ?: "Unknown Exceptions")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.body != null) {
+                    callback.onResponse(response.body!!.string())
+                } else {
+                    callback.onFailure("Null Response")
+                }
+            }
+        })
+    }
+
     fun showDialog(
         context: Context,
-        forceUpdate: Boolean,
         updateUrl: String
     ) {
         AlertDialog.Builder(context)
@@ -43,7 +77,11 @@ object Updater {
             .setMessage("您的应用版本过低，请升级应用。")
             .setPositiveButton(
                 "升级"
-            ) { dialog, which -> }
+            ) { dialog, which ->
+                val serviceIntent = Intent(context, DownloadService::class.java)
+                serviceIntent.data = Uri.parse(updateUrl)
+                context.startService(serviceIntent)
+            }
             .setNegativeButton("取消") { dialog, which ->
                 if (forceUpdate) {
                     exitProcess(0)
@@ -54,6 +92,16 @@ object Updater {
             .create()
             .show()
     }
+
+    fun register(context: Context): Updater {
+        val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        intentFilter.addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED)
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT)
+        LocalBroadcastManager.getInstance(context)
+            .registerReceiver(DownloadApkReceiver(), intentFilter)
+        return this
+    }
+
 }
 
 interface UpdaterCallback {
