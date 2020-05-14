@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 
 
-class DownloadApkReceiver : BroadcastReceiver() {
+class DownloadApkReceiver(private val progressListener: OnProgressListener) : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             DownloadManager.ACTION_DOWNLOAD_COMPLETE -> {
@@ -20,6 +20,8 @@ class DownloadApkReceiver : BroadcastReceiver() {
                 context.startActivity(viewDownloadIntent)
             }
             else -> {
+                val p = intent.getFloatExtra("progress", 0f)
+                progressListener.onProgress(p)
             }
         }
     }
@@ -43,4 +45,8 @@ class DownloadApkReceiver : BroadcastReceiver() {
         } else {
         }
     }
+}
+
+interface OnProgressListener {
+    fun onProgress(fraction: Float)
 }

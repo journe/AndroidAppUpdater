@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.view.View
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import okhttp3.*
@@ -15,7 +18,8 @@ import kotlin.system.exitProcess
 /**
  * Created by journey on 2020/5/7.
  */
-object Updater {
+object Updater : OnProgressListener {
+    const val UPDATER_DOWNLOAD_PROGRESS = "UPDATER_DOWNLOAD_PROGRESS"
     var dialogTitle: String = "应用更新"
     var downloadTitle: String = "下载"
     var downloadDesc: String = "应用正在下载"
@@ -23,6 +27,8 @@ object Updater {
     var negativeButton: String = "取消"
     var positiveButton: String = "升级"
     var forceUpdate: Boolean = false
+
+    private lateinit var mView: View
 
     fun get(url: String, callback: UpdaterCallback) {
         val okHttpClient = OkHttpClient()
@@ -72,34 +78,50 @@ object Updater {
         context: Context,
         updateUrl: String
     ) {
-        AlertDialog.Builder(context)
-            .setTitle("应用更新")
-            .setMessage("您的应用版本过低，请升级应用。")
+        mView = View.inflate(context, R.layout.download_dialog, null)
+        mView.findViewById<TextView>(R.id.mMessageText).text = dialogMessage
+        val dialog = AlertDialog.Builder(context)
+            .setTitle(dialogTitle)
+            .setView(mView)
             .setPositiveButton(
-                "升级"
-            ) { dialog, which ->
-                val serviceIntent = Intent(context, DownloadService::class.java)
-                serviceIntent.data = Uri.parse(updateUrl)
-                context.startService(serviceIntent)
-            }
-            .setNegativeButton("取消") { dialog, which ->
+                positiveButton, null
+            )
+            .setNegativeButton(negativeButton) { dialog, which ->
                 if (forceUpdate) {
                     exitProcess(0)
                 }
-                dialog.dismiss()
             }
             .setCancelable(!forceUpdate)
             .create()
-            .show()
+        dialog.show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val serviceIntent = Intent(context, DownloadService::class.java)
+            serviceIntent.data = Uri.parse(updateUrl)
+            context.startService(serviceIntent)
+            if (!forceUpdate) {
+                dialog.dismiss();
+            }
+        }
+
     }
 
     fun register(context: Context): Updater {
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         intentFilter.addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED)
+        intentFilter.addAction(UPDATER_DOWNLOAD_PROGRESS)
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT)
         LocalBroadcastManager.getInstance(context)
-            .registerReceiver(DownloadApkReceiver(), intentFilter)
+            .registerReceiver(DownloadApkReceiver(this), intentFilter)
         return this
+    }
+
+    override fun onProgress(fraction: Float) {
+        val progressBar = mView.findViewById<ProgressBar>(R.id.mProgressBar)
+        val textView = mView.findViewById<TextView>(R.id.mTextView)
+        progressBar.progress = fraction.toInt()
+        textView.text = String.format("%.2f", fraction) + "%"
+//        fraction.toString()
     }
 
 }

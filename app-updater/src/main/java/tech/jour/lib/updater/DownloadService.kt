@@ -12,7 +12,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 /**
  * Created by journey on 2020/5/8.
  */
-class DownloadService : IntentService("DownloadService") {
+class DownloadService : IntentService("UpdaterDownloadService") {
     override fun onHandleIntent(intent: Intent?) {
         val url = intent!!.dataString
         val downloadManager =
@@ -33,8 +33,6 @@ class DownloadService : IntentService("DownloadService") {
         request.setDescription(Updater.downloadDesc)
         request.setAllowedOverRoaming(false)
         val requestId = downloadManager.enqueue(request)
-        val localIntent = Intent(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        localIntent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, requestId)
 
         //查询下载信息
         val query = DownloadManager.Query()
@@ -43,12 +41,28 @@ class DownloadService : IntentService("DownloadService") {
             var isGoging = true
             while (isGoging) {
                 val cursor = downloadManager.query(query)
+                cursor.position
                 if (cursor != null && cursor.moveToFirst()) {
                     val status =
                         cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+
+                    //已经下载文件大小
+                    val downloaded =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    //下载文件的总大小
+                    val total =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    if (total > 0) {
+                        val progress = downloaded / total.toFloat() * 100
+                        val localIntent = Intent(Updater.UPDATER_DOWNLOAD_PROGRESS)
+                        localIntent.putExtra("progress", progress)
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent)
+                    }
                     when (status) {
                         DownloadManager.STATUS_SUCCESSFUL -> {
                             isGoging = false
+                            val localIntent = Intent(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+                            localIntent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, requestId)
                             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent)
                         }
                     }
@@ -60,3 +74,4 @@ class DownloadService : IntentService("DownloadService") {
         }
     }
 }
+
